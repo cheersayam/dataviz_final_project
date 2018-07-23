@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style> /* set the CSS */
+
+body { font: 12px Arial;}
+
+path {
+    stroke: steelblue;
+    stroke-width: 2;
+    fill: none;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: grey;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+body {
+          margin:0;position:fixed;top:0;right:0;bottom:0;left:0;
+          font: 12px sans-serif;
+          }
+
+    div {
+          max-width: 950px;
+        }
+    svg {
+          width:100%; height: 100%;
+        }
+
+point {
+    r: 15
+}
+
+
+</style>
+<body>
+<div class="debug">DEBUG:
+    <p id="debug1"></p>
+    <p id="debug2"></p>
+  </div>
+<div class="header">CS 498 - Final Project: American Community Survey Results Trend. </div>
+<div class="featuresButtons"></div>
+<div class="dispContainer"><svg></svg></div>
+<div class="footer">Created by Sreenidish Chinmayanilayam. Courtesy US Census Bureau.</div>
+
+<!-- <div id="option">
+    <input name="aboutViz"
+           type="button"
+           value="About the Visualization"
+           onclick="aboutViz()" />
+</div>
+-->
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
+<script>
+
+
+var analysisFeaturesMenu =
+{ "features" : [
+      {"key": "overview", "value":"Overview"},
+      {"key": "citizens", "value":"Citizens & PCI Per County"},
+      {"key": "incomepoverty", "value":"Income, Poverty & Unemployment"},
+      {"key": "racialdist", "value":"Racial Distribution Per Region"}
+  ]};
+
+
+var geoJSONUrl = "http://127.0.0.1:8080/cb_2017_us_state_500k.geojson";
+var cenusdataUrl = "http://127.0.0.1:8080/acs2015_county_data_totalPopByState.csv";
+
+var mapColor = d3.scaleLinear()
+                        // .range(['#ffffd4','#fee391','#fec44f','#fe9929','#d95f0e','#993404']);
+                         .range(['#fef0d9','#fdcc8a','#fc8d59','#d7301f']);
+
+// Set the dimensions of the canvas / graph
+var margin = {top: 30, right: 20, bottom: 30, left: 50},
+    gWidth = 700 - margin.left - margin.right,
+    gHeight = 200 - margin.top - margin.bottom,
+    width = 700 - margin.left - margin.right,
+    height = 100 - margin.top - margin.bottom;
+
+
+var sequentialButtons = d3.select(".featuresButtons")
+    .selectAll("button")
+    .data(analysisFeaturesMenu.features)
+    .enter().append("button")
+    .text(function(d) { return d.value; })
+    .on("click", function(buttonValue) {
+        document.getElementById("debug1").innerHTML = "buttonValue is: " + buttonValue.key;
+        switch (buttonValue.key) {
+        case "citizens":
+          citizens();
+          break;
+        case "incomepoverty":
+          incomepoverty();
+          break;
+        case "racialdist":
+          racialdist();
+          break;
+        case "overview":
+          overview();
+          break;
+        default:
+          document.getElementById("debug1").innerHTML = "NOTICE: Landed in default: " + buttonValue.key;
+          overview();
+          break;
+        }
+      });
+
+function overview() {
+
+var width = gWidth,
+    height = gHeight;
+
+document.getElementById("debug2").innerHTML = "Inside Overview";
+
+var svgContainer = d3.select(".dispContainer").select("svg");
+svgContainer .attr("width", width).attr("height", height);
+
+svgContainer.selectAll("*").remove();
+
+var mapColor = d3.scaleLinear()
+                         .range(['#ffffd4','#fee391','#fec44f','#fe9929','#d95f0e','#993404']);
+
+
+var projection = d3.geoAlbers()
+                   .scale(width / 2 / Math.PI)
+                   .scale(width)
+                   .translate([width / 2, height / 2]);
+
+
+var path = d3.geoPath()
+             .projection(projection);
+
+d3.csv(cenusdataUrl, function(data) {
+    mapColor.domain ([
+    d3.min(data,function(d) {return parseInt(d.TotalPop); }), d3.max(data,function(d) {return parseInt(d.TotalPop); })
+     ]);
+
+  d3.json(geoJSONUrl, function(err, geojson) {
+
+     for (var i=0; i < data.length ; i++) {
+        var travGeo = data[i].State;
+        var travTotalPop = parseInt(data[i].TotalPop);
+        for (j=0; j < geojson.features.length; j++) {
+          var geo = geojson.features[j].properties.NAME;
+          if (travGeo == geo) {
+              geojson.features[j].properties.value = travTotalPop;
+              break;
+          }
+        }
+
+     }
+
+       svgContainer
+        .selectAll("path")
+        .data(geojson.features)
+        .enter()
+        .append("path")
+        .attr("d", path)
+        .style("fill", function(d){
+          var value = d.properties.value;
+          if (value) {
+            return(mapColor(value))
+          } else {
+            return ("#666666")
+          }
+        });
+    });
+
+});
+
+
+}
+
+
+function citizens() {
+
+}
+
+
+
+function incomepoverty() {
+
+var width = gWidth,
+    height = gHeight;
+
+document.getElementById("debug2").innerHTML = "Inside IncomePoverty";
+
+var svgContainer = d3.select(".dispContainer").select("svg");
+svgContainer .attr("width", width).attr("height", height);
+svgContainer.selectAll("*").remove();
+
+var xValue = function(d) { return d.IncomePerCap;},
+    xScale = d3.scaleLinear().range([0, width]), 
+    xMap = function(d) { return xScale(xValue(d));},
+    //xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+    xAxis = d3.axisBottom(xScale);
+
+
+var yValue = function(d) { return d["Poverty"];}, 
+    yScale = d3.scaleLinear().range([height, 0]),
+    yMap = function(d) { return yScale(yValue(d));},
+    yAxis = d3.axisLeft(yScale);
+
+var cValue = function(d) { return d.Unemployment;},
+    color = d3.scaleOrdinal(d3.schemeCategory10);
+
+
+// Circle size (Represents Child Poverty)
+var cirRadValue = function(d) { return d["ChildPoverty"];},
+    cirRadScale = d3.scaleLinear().range([3.5, 3.5]), 
+    cirRadMap = function(d) { return cirRadScale(cirRadValue(d));};
+
+
+var svg = svgContainer
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+d3.csv(cenusdataUrl, function(error, data) {
+
+  data.forEach(function(d) {
+    d.IncomePerCap = +d.IncomePerCap;
+    d.Unemployment = +d.Unemployment;
+    d.Poverty = +d.Poverty;
+    d.ChildPoverty = +d.ChildPoverty;
+//    console.log(d);
+  });
+
+  xScale.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
+  yScale.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
+
+  svgContainer.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+      .append("text")
+      .attr("class", "label")
+      .attr("x", width)
+      .attr("y", -6)
+      .style("text-anchor", "end")
+      .text("Income per Capita");
+
+  svgContainer.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("class", "label")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Poverty");
+
+  // draw dots
+  svgContainer.selectAll(".dot")
+      .data(data)
+    .enter().append("circle")
+      .attr("class", "dot")
+      .attr("r", cirRadMap)
+      //.attr("r", 3.5)
+      .attr("cx", xMap)
+      .attr("cy", yMap)
+      .style("fill", function(d) { return color(cValue(d));})
+      .on("mouseover", function(d) {
+          tooltip.transition()
+               .duration(200)
+               .style("opacity", .9);
+          tooltip.html(d["State"] + "<br/> (" + xValue(d)
+	        + ", " + yValue(d) + ")")
+               .style("left", (d3.event.pageX + 5) + "px")
+               .style("top", (d3.event.pageY - 28) + "px");
+      })
+      .on("mouseout", function(d) {
+          tooltip.transition()
+               .duration(500)
+               .style("opacity", 0);
+      });
+
+  // Legend
+  var legend = svgContainer.selectAll(".legend")
+      .data(color.domain())
+    .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+  // Legend colored rectangles
+  legend.append("rect")
+      .attr("x", width - 18)
+      .attr("width", 18)
+      .attr("height", 18)
+      .style("fill", color);
+
+  // Legend text
+  legend.append("text")
+      .attr("x", width - 24)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "end")
+      .text(function(d) { return d;})
+});
+
+}
+
+
+function racialdist() {
+
+}
+
+</script>
+</body>
