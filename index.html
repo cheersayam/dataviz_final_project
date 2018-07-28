@@ -35,15 +35,107 @@ point {
 }
 
 
+.chart div {
+  font: 10px sans-serif;
+  background-color: steelblue;
+  text-align: right;
+  padding: 3px;
+  margin: 1px;
+  color: white;
+}
+
+
+.y.axisRight text {
+    fill: orange;
+}
+
+
+.y.axisLeft text {
+    fill: steelblue;
+}
+
+<!-- ['#ffffd4','#fee391','#fec44f','#fe9929','#d95f0e','#993404'] -->
+
+.bar1 {
+  fill: '#ffffd4';
+}
+.bar2 {
+  fill: '#fee391';
+}
+
+.bar3 {
+  fill: '#fec44f';
+}
+
+
+.bar4 {
+  fill: '#fe9929';
+}
+
+
+.bar5 {
+  fill: '#d95f0e';
+}
+
+.bar6 {
+  fill: '#993404';
+}
+
+
+.x.axis path {
+  display: none;
+}
+
+<!-- slider -->
+
+.ticks {
+      font-size: 10px;
+}
+
+
+.track,
+.track-inset,
+.track-overlay {
+  stroke-linecap: round;
+}
+
+.track {
+  stroke: #000;
+  stroke-opacity: 0.3;
+  stroke-width: 10px;
+}
+
+
+.track-inset {
+  stroke: #ddd;
+  stroke-width: 8px;
+}
+
+.track-overlay {
+    pointer-events: stroke;
+    stroke-width: 50px;
+    stroke: transparent;
+    cursor: crosshair;
+}
+
+.handle {
+      fill: #fff;
+      stroke: #000;
+      stroke-opacity: 0.5;
+      stroke-width: 1.25px;
+}
+
 </style>
+
 <body>
 <div class="debug">DEBUG:
     <p id="debug1"></p>
     <p id="debug2"></p>
   </div>
-<div class="header">CS 498 - Final Project: American Community Survey Results Trend. </div>
+<div class="header">CS 498 Final Project: American Community Survey Results Trend. </div>
 <div class="featuresButtons"></div>
 <div class="dispContainer"><svg></svg></div>
+<div id="slider"></div>
 <div class="footer">Created by Sreenidish Chinmayanilayam. Courtesy US Census Bureau.</div>
 
 <!-- <div id="option">
@@ -62,27 +154,116 @@ point {
 var analysisFeaturesMenu =
 { "features" : [
       {"key": "overview", "value":"Overview"},
-      {"key": "citizens", "value":"Citizens & PCI Per County"},
       {"key": "incomepoverty", "value":"Income, Poverty & Unemployment"},
       {"key": "racialdist", "value":"Racial Distribution Per Region"}
   ]};
 
+dataFilesBaseURL="http://127.0.0.1:8080/data/";
+//dataFilesBaseURL="https://raw.githubusercontent.com/cheersayam/dataviz_final_project/data/";
 
-//var geoJSONUrl = "http://127.0.0.1:8080/cb_2017_us_state_500k.geojson";
-var geoJSONUrl = "https://raw.githubusercontent.com/cheersayam/dataviz_final_project/master/cb_2017_us_state_500k.geojson";
-//var cenusdataUrl = "http://127.0.0.1:8080/acs2015_county_data_totalPopByState.csv";
-var cenusdataUrl = "https://raw.githubusercontent.com/cheersayam/dataviz_final_project/master/acs2015_county_data_totalPopByState.csv";
+travYear = 2015;
+var filegeoJSONURL = "cb_2017_us_state_500k.geojson",
+    filePopulationByState = "acs"+travYear+"_PopulationByState.csv",
+    fileKeyStatsByState = "acs"+travYear+"_KeyStatsByState.csv",
+    fileTotalPopulationByRegion = "acs"+travYear+"_TotalPopulationByRegion.csv",
+    fileRacialDistributionPerRegion = "acs"+ travYear + "_RacialDistributionPerRegion.csv";
+
+
+var filegeoJSONURL = dataFilesBaseURL + filegeoJSONURL,
+    filePopulationByStateURL = dataFilesBaseURL + filePopulationByState,
+    fileKeyStatsByStateURL = dataFilesBaseURL + fileKeyStatsByState,
+    fileRacialDistributionPerRegionURL = dataFilesBaseURL + fileRacialDistributionPerRegion,
+    fileTotalPopulationByRegionURL = dataFilesBaseURL + fileTotalPopulationByRegion;
+
+console.log("File: filegeoJSONURL: " +  filegeoJSONURL);
+console.log("File: filePopulationByStateURL: " +  filePopulationByStateURL);
+console.log("File: fileKeyStatsByStateURL: " +  fileKeyStatsByStateURL);
+console.log("File: fileRacialDistributionPerRegionURL: " +  fileRacialDistributionPerRegionURL);
+console.log("File: fileTotalPopulationByRegionURL: " +  fileTotalPopulationByRegionURL);
+
+
+// Set the dimensions of the canvas / graph
+var margin = {top: 30, right: 20, bottom: 30, left: 50},
+    gWidth = 960 - margin.left - margin.right,
+    gHeight = 500 - margin.top - margin.bottom;
+
+
+function slider(svgContainer) {
+var formatDateIntoYear = d3.timeFormat("%Y");
+var formatDate = d3.timeFormat("%b %Y");
+
+var startDate = new Date("2004-11-01"),
+    endDate = new Date("2017-04-01");
+
+var width = gWidth,
+    height = gHeight;
+
+var svg = svgContainer.select("#slider");
+  /*  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height); */
+
+var x = d3.scaleTime()
+    .domain([startDate, endDate])
+    .range([0, width])
+    .clamp(true);
+
+var slider = svgContainer.append("g")
+    .attr("class", "slider")
+    .attr("transform", "translate(" + margin.left + "," + height / 2 + ")");
+
+slider.append("line")
+    .attr("class", "track")
+    .attr("x1", x.range()[0])
+    .attr("x2", x.range()[1])
+  .select(function() { return this.parentNode.appendChild(this.cloneNode(true)); })
+    .attr("class", "track-inset")
+  .select(function() { return this.parentNode.appendChild(this.cloneNode(true)); })
+    .attr("class", "track-overlay")
+    .call(d3.drag()
+        .on("start.interrupt", function() { slider.interrupt(); })
+        .on("start drag", function() { hue(x.invert(d3.event.x)); }));
+
+slider.insert("g", ".track-overlay")
+    .attr("class", "ticks")
+    .attr("transform", "translate(0," + 18 + ")")
+  .selectAll("text")
+    .data(x.ticks(10))
+    .enter()
+    .append("text")
+    .attr("x", x)
+    .attr("y", 10)
+    .attr("text-anchor", "middle")
+    .text(function(d) { return formatDateIntoYear(d); });
+
+var label = slider.append("text")
+    .attr("class", "label")
+    .attr("text-anchor", "middle")
+    .text(formatDate(startDate))
+    .attr("transform", "translate(0," + (-25) + ")")
+
+var handle = slider.insert("circle", ".track-overlay")
+    .attr("class", "handle")
+    .attr("r", 9);
+
+function hue(h) {
+  handle.attr("cx", x(h));
+  label
+    .attr("x", x(h))
+    .text(formatDate(h));
+  svg.style("background-color", d3.hsl(h/1000000000, 0.8, 0.8));
+}
+
+}
+
+
+
 
 var mapColor = d3.scaleLinear()
                         // .range(['#ffffd4','#fee391','#fec44f','#fe9929','#d95f0e','#993404']);
                          .range(['#fef0d9','#fdcc8a','#fc8d59','#d7301f']);
 
-// Set the dimensions of the canvas / graph
-var margin = {top: 30, right: 20, bottom: 30, left: 50},
-    gWidth = 700 - margin.left - margin.right,
-    gHeight = 200 - margin.top - margin.bottom,
-    width = 700 - margin.left - margin.right,
-    height = 100 - margin.top - margin.bottom;
+
 
 
 var sequentialButtons = d3.select(".featuresButtons")
@@ -93,9 +274,6 @@ var sequentialButtons = d3.select(".featuresButtons")
     .on("click", function(buttonValue) {
         document.getElementById("debug1").innerHTML = "buttonValue is: " + buttonValue.key;
         switch (buttonValue.key) {
-        case "citizens":
-          citizens();
-          break;
         case "incomepoverty":
           incomepoverty();
           break;
@@ -111,6 +289,7 @@ var sequentialButtons = d3.select(".featuresButtons")
           break;
         }
       });
+
 
 function overview() {
 
@@ -137,12 +316,12 @@ var projection = d3.geoAlbers()
 var path = d3.geoPath()
              .projection(projection);
 
-d3.csv(cenusdataUrl, function(data) {
+d3.csv(filePopulationByStateURL, function(data) {
     mapColor.domain ([
     d3.min(data,function(d) {return parseInt(d.TotalPop); }), d3.max(data,function(d) {return parseInt(d.TotalPop); })
      ]);
 
-  d3.json(geoJSONUrl, function(err, geojson) {
+  d3.json(filegeoJSONURL, function(err, geojson) {
 
      for (var i=0; i < data.length ; i++) {
         var travGeo = data[i].State;
@@ -175,11 +354,7 @@ d3.csv(cenusdataUrl, function(data) {
 
 });
 
-
-}
-
-
-function citizens() {
+slider(svgContainer);
 
 }
 
@@ -197,13 +372,13 @@ svgContainer .attr("width", width).attr("height", height);
 svgContainer.selectAll("*").remove();
 
 var xValue = function(d) { return d.IncomePerCap;},
-    xScale = d3.scaleLinear().range([0, width]), 
+    xScale = d3.scaleLinear().range([0, width]),
     xMap = function(d) { return xScale(xValue(d));},
     //xAxis = d3.svg.axis().scale(xScale).orient("bottom");
     xAxis = d3.axisBottom(xScale);
 
 
-var yValue = function(d) { return d["Poverty"];}, 
+var yValue = function(d) { return d["Poverty"];},
     yScale = d3.scaleLinear().range([height, 0]),
     yMap = function(d) { return yScale(yValue(d));},
     yAxis = d3.axisLeft(yScale);
@@ -214,7 +389,7 @@ var cValue = function(d) { return d.Unemployment;},
 
 // Circle size (Represents Child Poverty)
 var cirRadValue = function(d) { return d["ChildPoverty"];},
-    cirRadScale = d3.scaleLinear().range([3.5, 3.5]), 
+    cirRadScale = d3.scaleLinear().range([3.5, 3.5]),
     cirRadMap = function(d) { return cirRadScale(cirRadValue(d));};
 
 
@@ -228,7 +403,7 @@ var tooltip = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
 
-d3.csv(cenusdataUrl, function(error, data) {
+d3.csv(fileKeyStatsByStateURL, function(error, data) {
 
   data.forEach(function(d) {
     d.IncomePerCap = +d.IncomePerCap;
@@ -310,12 +485,203 @@ d3.csv(cenusdataUrl, function(error, data) {
       .style("text-anchor", "end")
       .text(function(d) { return d;})
 });
-
+slider(svgContainer);
 }
 
 
 function racialdist() {
+// https://bl.ocks.org/bricedev/0d95074b6d83a77dc3ad
 
+  var width = gWidth,
+    height = gHeight;
+
+    console.log("width: " + width  + " <end>");
+    console.log("height: " + height  + " <end>");
+    console.log("margin.top: " + margin.top  + " <end>");
+    console.log("margin.bottom: " + margin.bottom  + " <end>");
+    console.log("margin.left: " + margin.left  + " <end>");
+    console.log("margin.right: " + margin.right  + " <end>");
+
+    //gWidth = 700 - margin.left - margin.right,
+    //gHeight = 200 - margin.top - margin.bottom,
+    //width = 700 - margin.left - margin.right,
+    //height = 100 - margin.top - margin.bottom;
+
+//document.getElementById("debug2").innerHTML = "Racial Distribution";
+
+var svgContainer = d3.select(".dispContainer").select("svg");
+svgContainer .attr("width", width).attr("height", height);
+svgContainer.selectAll("*").remove();
+
+var totalPopArr=[];
+var columns=null;
+var regions=[];
+var regionsTotalPop=[];
+var categoriesNames = [];
+
+d3.csv(fileTotalPopulationByRegionURL, function(error, regionData) {
+regionData.map(function(d) {
+  regions.push(d.Region);
+  d.TotalPop = Number(d.TotalPop);
+  console.log("d.TotalPop: " + d.TotalPop + " <end>");
+  regionsTotalPop.push(d.TotalPop);
+});
+
+console.log("regions: " + regions + " <end>");
+console.log("regionsTotalPop: " + regionsTotalPop + " <end>");
+
+});
+
+categoriesNames=regions;
+
+
+
+
+var y = d3.scaleLog()
+  //.domain([d3.min(regionsTotalPop), d3.max(regionsTotalPop)])
+  .range([height, 0]);
+
+
+console.log ("y log scale:" + y + ' <end>');
+
+var x0 = d3.scaleOrdinal()
+    .domain(categoriesNames)
+    .range([margin.left, gWidth-margin.left]);
+
+var x1 = d3.scaleOrdinal();
+
+
+var xAxis = d3.axisBottom(x0).tickFormat(function(d){ return d;});
+var yAxis = d3.axisLeft(y);
+
+
+var color = d3.scaleOrdinal()
+    .range(['#ffffd4','#fee391','#fec44f','#fe9929','#d95f0e','#993404']);
+
+var svg = svgContainer
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+//d3.json("data.json", function(error, data) {
+
+var columns = null;
+d3.csv(fileTotalPopulationByRegionURL , function(data) {
+
+if(columns==null){
+        var headerNames = d3.keys(data[0]);
+        columns=headerNames.slice(1,7);
+        console.log("columns: " + columns + " <end>");
+  }
+
+  data.forEach(function(d) {
+    d.Hispanic = +d.Hispanic;
+    d.Black = +d.Black;
+    d.Native = +d.Native;
+    d.Asian = +d.Asian;
+    d.Pacific = +d.Pacific;
+    //d.TotalPop = +d.TotalPop;
+  });
+
+
+//rateNames: Hispanic,White,Black,Native,Asian,Pacific
+var rateNames = columns;
+console.log("rateNames: " + rateNames + " <end>");
+
+
+x0.domain(categoriesNames);
+//x1.domain(rateNames).rangeRoundBands([0, x0.rangeBand()]);
+x1 = d3.scaleBand()
+    .rangeRound([0, x0.bandwidth])
+    .paddingInner(0.5);
+
+/*y.domain([d3.min(data, function(d){ return d3.min([d.Hispanic,d.White,d.Black,d.Native,d.Asian,d.Pacific])}),
+d3.max(data, function(d){ return d3.max([d.Hispanic,d.White,d.Black,d.Native,d.Asian,d.Pacific])})]);
+*/
+
+y.domain([d3.min(regionsTotalPop), d3.max(regionsTotalPop)])
+
+
+console.log ("x0.domain: " + x0.domain());
+console.log ("x1.domain: " + x1.domain());
+console.log ("y.domain: " + y.domain())
+
+
+  svgContainer.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + gHeight + ")")
+      .call(xAxis);
+
+  svgContainer.append("g")
+      .attr("class", "y axis")
+      .style('opacity','0')
+      .call(yAxis)
+  .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .style('font-weight','bold')
+      .text("Value");
+
+  svgContainer.select('.y').transition().duration(500).delay(1300).style('opacity','1');
+
+  var slice = svgContainer.selectAll(".slice")
+      .data(regions)
+      .enter().append("g")
+      .attr("class", "g")
+      .attr("transform",function(d) { return "translate(" + x0(d) + ",0)"; });
+
+  slice.selectAll("rect")
+      .data(data, function(d) { return [d.Hispanic,d.White, d.Black,d.Native,d.Asian,d.Pacific]; })
+  .enter().append("rect")
+      .attr("width", x1.bandwidth())
+      .attr("x", function(d,i) { return x1(rateNames[i]); })
+      .style("fill", function(d,i) { return color(rateNames[i]) })
+      .attr("y", function(d) { return y(0); })
+      .attr("height", function(d) { return gHeight - y(0); })
+      .on("mouseover", function(d,i) {
+          d3.select(this).style("fill", d3.rgb(color(rateNames[i])).darker(2));
+      })
+      .on("mouseout", function(d) {
+          d3.select(this).style("fill", color(d));
+      });
+
+  slice.selectAll("rect")
+      .transition()
+      .delay(function (d) {return Math.random()*1000;})
+      .duration(1000)
+      .attr("y", function(d) { return y(d); })
+      .attr("height", function(d) { return height - y(d.value); });
+
+  //Legend
+  var legend = svgContainer.selectAll(".legend")
+    .data(rateNames)
+
+      //.data(data[0].values.map(function(d) { return d.rate; }).reverse())
+  .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d,i) { return "translate(0," + i * 20 + ")"; })
+      .style("opacity","0");
+
+  legend.append("rect")
+      .attr("x", gWidth - 18)
+      .attr("width", 18)
+      .attr("height", 18)
+      .style("fill", function(d) { return color(d); });
+
+  legend.append("text")
+      .attr("x", gWidth - 24)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "end")
+      .text(function(d) {return d; });
+
+  legend.transition().duration(500).delay(function(d,i){ return 1300 + 100 * i; }).style("opacity","1");
+
+});
+slider(svgContainer);
 }
 
 </script>
