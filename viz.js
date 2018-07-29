@@ -1,5 +1,6 @@
 var svgContainer = null;
 var gDebugMsg = null;
+var dataFilesBaseURL=null;
 
 var analysisFeaturesMenu =
 { "features" : [
@@ -8,8 +9,14 @@ var analysisFeaturesMenu =
       {"key": "3", "value":"racialdist"}
   ]};
 
-//dataFilesBaseURL="http://127.0.0.1:8080/data/";
-dataFilesBaseURL="https://raw.githubusercontent.com/cheersayam/dataviz_final_project/data/";
+
+var loc = window.location;
+var hostname = loc.hostname;
+
+if (hostname.includes("cheersayam.github")) {
+   dataFilesBaseURL="https://raw.githubusercontent.com/cheersayam/dataviz_final_project/data/";
+}
+else {dataFilesBaseURL="http://127.0.0.1:8080/data/";}
 
 var triggerSelected=null;
 var travYear = 2015;
@@ -302,7 +309,7 @@ d3.select(".abtVizMsg")
 function overview(svgContainer) {
 var width = canvasWidth,
     height = canvasHeight;
-debugMsg("Inside Overview");
+//debugMsg("Inside Overview");
 
 
 var mapColor = d3.scaleLinear()
