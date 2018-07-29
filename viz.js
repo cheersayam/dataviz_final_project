@@ -9,6 +9,11 @@ var analysisFeaturesMenu =
       {"key": "3", "value":"racialdist"}
   ]};
 
+
+  var abtVizMsgMenu =
+  { "features" : [
+        {"key": "11", "value":"About this visulization"}
+  ]};
 /*
 var loc = window.location;
 var hostname = loc.hostname;
@@ -93,7 +98,9 @@ slider.append("line")
           //label
           //    .attr("x", x(h))
           //    .text(formatDate(h));
-          updateView(formatDateIntoYear(h), triggerSelected ) }));
+          // UCOMMENT ME:
+          // updateView(formatDateIntoYear(h), triggerSelected )
+        }));
 
 //        .on("start drag", function() { hue(x.invert(d3.event.x));}));
 
@@ -138,7 +145,7 @@ var mapColor = d3.scaleLinear()
                          .range(['#fef0d9','#fdcc8a','#fc8d59','#d7301f']);
 
 function debugMsg(message) {
-    gDebugMsg = "<br/>DEBUG: " + message;
+    gDebugMsg = "DEBUG: " + message;
     document.getElementById('debugMsg').innerHTML = gDebugMsg;
 }
 
@@ -146,7 +153,7 @@ function isRealValue(obj) {
  return obj && obj !== 'null' && obj !== 'undefined';
 }
 
-function svgContainerInit(action) {
+function svgContainerInit(action="hold") {
     //d3.select(".abtVizMsg").style("visibility", "hidden");
 
     svgContainer =  d3.select(".dispContainer").select("svg");
@@ -155,27 +162,28 @@ function svgContainerInit(action) {
 
       switch (action) {
       case "clear":
+        console.log("Clearing svg elements: action = " + action );
+        //document.getElementById('#abtVizDiv').style.display = 'none';
+        //document.getElementById('#featuresButtons').style.display = 'none';
         svgContainer.selectAll("*").remove();
+        d3.selectAll(".featuresButtonsA").remove();
         break;
       default:
-         console.log("In svgContainerInit: Nothing to do.");
+         console.log("In svgContainerInit: Not clearing objects.");
     }
 }
 
 function updateView(yearToDisplay=2015,featureToDisplay="") {
   var travYear = yearToDisplay;
+  console.log ("Inside updateView(). yearToDisplay: " + yearToDisplay);
+  console.log ("Inside updateView(). featureToDisplay: " + featureToDisplay);
+  if(featureToDisplay != "" || featureToDisplay != null)
+  {
+    triggerSelected = parseInt(featureToDisplay);
+  }
 
-  var sequentialButtons = d3.select(".featuresButtons")
-    .selectAll("button")
-    .data(analysisFeaturesMenu.features)
-    .enter().append("button")
-    .text(function(d) { return d.key; })
-    .on("click", function(buttonValue) {
-        triggerSelected=buttonValue.key;
-        console.log("triggerSelected: " + triggerSelected);
-        console.log("Calling displayTheScene following features button click");
-        displayTheScene(buttonValue.key);
-/*
+
+  /*
         switch (buttonValue.key) {
         case "1":
           overview(svgContainer);
@@ -190,18 +198,61 @@ function updateView(yearToDisplay=2015,featureToDisplay="") {
           debugMsg("buttonKey is: " + buttonValue.key);
           break;
         }
-*/
-      });
 
+      });
+*/
       if (!isRealValue(triggerSelected)) {
-        console.log("Calling displayAboutViz()");
-        displayAboutVizBtn();
+        showHide('abtViz');
+        svgContainerInit();
+        var choiceBtn = d3.select(".featuresButtonsA")
+        .selectAll("button")
+        .data(abtVizMsgMenu.features)
+        .enter().append("button")
+        .attr("id", "abtVizBtn")
+        .text(function(d) { return d.value; })
+        .on("click", function(buttonValue) {
+            triggerSelected=buttonValue.key;
+            document.getElementById("abtVizBtn").style.display = 'none';
+            svgContainerInit("clear");
+            showHide('abtVizDiv', "show"); return false;
+          });
+          overview();
       } else {
         //d3.select(".abtVizMsg").style("visibility", "none");
-        makeVizMsgHidden();
+        showHide('abtVizDiv', "hide");
         displayTheScene(triggerSelected);
       }
 }
+
+
+function showHide(shID, show="show") {
+  console.log("Entering showHide()");
+
+  /*
+  if (document.getElementById(shID)) {
+    console.log("showHide(): shID: " + shID);
+    if (document.getElementById(shID).style.display != 'none') {
+      console.log("showHide(): shID: " + "NONE");
+      document.getElementById(shID).style.display = 'block';
+    } else {
+      console.log("showHide(): shID: " + "NONONE");
+      document.getElementById(shID).style.display = 'none';
+    }
+  }
+
+*/
+
+
+  if (document.getElementById(shID)) {
+    console.log("showHide(): shID: " + shID + "show: " + show);
+    if (show == "hide") {
+      document.getElementById(shID).style.display = 'none';
+    } else {
+      document.getElementById(shID).style.display = 'block';
+    }
+  }
+}
+
 
 function makeVizMsgHidden(){
   var div = document.getElementById('vizMsg');
@@ -213,14 +264,48 @@ function displayTheScene(choice) {
   console.log("Validating svgContainer: " + isRealValue(svgContainer));
   console.log ("In displayTheScene: value of choice is: " + choice );
   svgContainerInit("clear");
+
+
+  var sequentialButtons = d3.select(".featuresButtons")
+  .selectAll("button")
+  .data(analysisFeaturesMenu.features)
+  .enter().append("button")
+  .text(function(d) { return d.key; })
+  .on("click", function(buttonValue) {
+      triggerSelected=buttonValue.key;
+      console.log("triggerSelected: " + triggerSelected);
+      console.log("Calling displayTheScene following features button click");
+      displayTheScene(buttonValue.key);
+  /*
+  choice = parseInt(choice);
+  console.log("Choice after parseInt: " + choice)
   switch (choice) {
-    case "1":
+    case 1:
       overview();
       break;
-    case "2":
+    case 2:
       incomepoverty();
       break;
-    case "3":
+    case 3:
+      racialdist();
+      break;
+    default:
+      console.log("displayScene could not be rendered. The choice was: " + choice);
+      break;
+    }
+    */
+  });
+
+  choice = parseInt(choice);
+  console.log("Choice after parseInt: " + choice)
+  switch (choice) {
+    case 1:
+      overview();
+      break;
+    case 2:
+      incomepoverty();
+      break;
+    case 3:
       racialdist();
       break;
     default:
@@ -228,7 +313,10 @@ function displayTheScene(choice) {
       break;
     }
 }
+
+/*
 function displayAboutVizBtn() {
+  svgContainerInit("clear");
   d3.select(".abtVizMsg").style("opacity", "1");
 
   var displayAboutBtn = d3.select(".abtVizMsg")
@@ -240,6 +328,7 @@ function displayAboutVizBtn() {
         displayAboutVizMessage();
     });
 }
+*/
 
 function displayAboutVizMessage() {
   console.log("Inside displayAboutVizMessage()");

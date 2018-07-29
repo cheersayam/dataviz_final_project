@@ -9,18 +9,55 @@
     <script type="text/javascript" src="viz.js"></script>
 </head>>
 
-<body onload="updateView()">
+<body onload="updateView();return false;">
   <div class="debug">
     <p id="debugMsg"></p>
   </div>
-<div class="header">CS 498 Final Project: American Community Survey Results Trend.</div>
-<div class="featuresButtons"></div>
+  <div id="abtVizDiv" class="more">
+        <p><span class="heading2">CS 498 - Data Visualization</span></p>
+        <p><span class="heading2">Final Project submission by Sreenidish Chinmayanilayam</span></p>
+        <p><span class="heading2">University of Illinois at Urbana-Champaign, MSCDS Summer 2018</span></p>
+        <p><span class="heading2">2010-2015 American Community Survey (ACS) Results Trend.</span>
+        <p>
+            Using 2015 US Census data find out the sex ratio and citizen ratio across the country. Find the racial make up of various census regions. Find out which areas have highest overall and child poverty in relation to per capita income distribution.
+
+          <br/>
+          What kind of chart? Why? Uniform or logarithmic axes? Axes extend from zero or just the range of the data? How large are the marks? What shape are the marks? Where is the highlighted portion in the scene? Is there enough whitespace?
+
+          <br/>
+          It contains 4 charts. In this visualization I am analyzing 2010 to 2015 US Census ACS. Only the contiguous states related data were used for analysis. These are the charts I have created:
+           (i) Population Overview
+           (iii) Income, Poverty & Unemployment
+           (iv) Racial Distribution Per Region
+
+
+           <br/>
+           The first is  filled maps giving views with two different aspects captured in the data set. Population Overview filled map provides an overview of total population per state, women to men ratio.
+           <br/>
+           Income, Poverty & Unemployment is  a scattered plot that captures the relation ship between per capita income and poverty in each US State.  This is a discrete quantitative vs continous quantitative plot. Circle is the shape used. The position of circle represents this relationshiop. The size of the circle represents another key indicator:  '% of child poverty'. The color of the circle represents percentage unemployment in each state.
+           <br/>
+           Racial Distribution Per Region is a bar chart representing racial make up of population across 4 US census regions. It is plotted against regions and 6 racial groupings Vs the percentage population of each race, which is a continuous variable for this purpose.
+
+        </p>
+        <p class="question">Does the narrative visualization correctly follow the hybrid structure as stated by the essay?</p>
+        <p class="answer">Yes. The narrative visualization correctly follows the hybrid structure stated in the essay. Yes. The narrative visualization correctly follows the hybrid structure stated in the essay.Yes. The narrative visualization correctly follows the hybrid structure stated in the essay.</p>
+        <p class="question">Does the narrative visualization effectively utilize scenes?</p>
+        <p class="answer">Yes. The essay properly discusses the layout and design of the scenes of the narrative visualization.</p>
+        <p class="question">Does the narrative visualization effectively utilize annotations?</p>
+        <p class="answer">Yes. The essay properly discusses the application of the annotations of the narrative visualization.</p>
+        <p class="question">Does the narrative visualization effectively utilize parameters?</p>
+        <p class="answer">Yes. The essay properly discusses the parameters of the narrative visualization, including describing which parameters control the current state of the narrative visualization.</p>
+        <p class="question">Does the narrative visualization effectively utilize triggers?</p>
+        <p class="answer">Yes. The essay properly discusses the triggers, including what user events trigger what parameter value changes, and how the viewer is aware of available user events.</p>
+
+      <p><a href="#" id="abtVizDiv-hide" class="hideLink" onclick="updateView(2010,1);return false;">Take me back to the visualization.</a></p>
+  </div>
+<div class="featuresButtonsA" id="featuresButtonsA"></div>
+<div class="featuresButtons" id="featuresButtons"></div>
 <div class="dispContainer">
-  <div id="vizMsg" class="abtVizMsg"></div>
   <svg></svg>
-  <svg id="slider"></svg>
+<!--  <svg id="slider"></svg> -->
 </div>
 <div id="slider"></div>
-<div class="footer">Created by Sreenidish Chinmayanilayam.</div>
 </body>
 </html>
