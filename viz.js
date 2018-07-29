@@ -9,7 +9,7 @@ var analysisFeaturesMenu =
       {"key": "3", "value":"racialdist"}
   ]};
 
-
+/*
 var loc = window.location;
 var hostname = loc.hostname;
 
@@ -18,6 +18,9 @@ if (hostname.includes("cheersayam.github")) {
 }
 else {dataFilesBaseURL="http://127.0.0.1:8080/data/";}
 
+*/
+
+dataFilesBaseURL = "./data/";
 var triggerSelected=null;
 var travYear = 2015;
 var filegeoJSONURL = "cb_2017_us_state_500k.geojson",
