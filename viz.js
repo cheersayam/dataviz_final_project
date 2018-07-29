@@ -8,8 +8,8 @@ var analysisFeaturesMenu =
       {"key": "3", "value":"racialdist"}
   ]};
 
-dataFilesBaseURL="http://127.0.0.1:8080/data/";
-//dataFilesBaseURL="https://raw.githubusercontent.com/cheersayam/dataviz_final_project/data/";
+//dataFilesBaseURL="http://127.0.0.1:8080/data/";
+dataFilesBaseURL="https://raw.githubusercontent.com/cheersayam/dataviz_final_project/data/";
 
 var triggerSelected=null;
 var travYear = 2015;
