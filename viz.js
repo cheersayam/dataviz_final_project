@@ -2,6 +2,11 @@ var svgContainer = null;
 var gDebugMsg = null;
 var dataFilesBaseURL=null;
 
+var sliderCircleX = 0;
+var sliderCircleY = 0;
+
+var travYear = "";
+
 var analysisFeaturesMenu =
 { "features" : [
       {"key": "1", "value":"overview"},
@@ -12,7 +17,7 @@ var analysisFeaturesMenu =
 
   var abtVizMsgMenu =
   { "features" : [
-        {"key": "11", "value":"About this visulization"}
+        {"key": "11", "value":"About this visualization"}
   ]};
 /*
 var loc = window.location;
@@ -49,14 +54,31 @@ console.log("File: fileTotalPopulationByRegionURL: " +  fileTotalPopulationByReg
 
 
 // Set the dimensions of the canvas / graph
+
+/*
 var margin = {top: 30, right: 20, bottom: 30, left: 50, slider: 60},
     gWidth = 960 - margin.left - margin.right,
     gHeight = 700 - margin.top - margin.bottom,
     canvasWidth = gWidth,
     canvasHeight = gHeight - margin.slider;
+*/
 
 
-function slider(svgContainer) {
+    var margin = {top: 30, right: 20, bottom: 30, left: 50, slider: 60},
+    gWidth = 960 - margin.left - margin.right,
+    gHeight = 700 - margin.top - margin.bottom -  - margin.slider;
+    canvasWidth = gWidth,
+    canvasHeight = gHeight;
+
+
+
+//function slider(svgContainer) {
+
+function slider() {
+sliderSVG = d3.select(".slider").select("svg");
+sliderSVG.attr("width", gWidth).attr("height", margin.slider);
+
+
 var formatDateIntoYear = d3.timeFormat("%Y");
 var formatDate = d3.timeFormat("%b %Y");
 
@@ -64,9 +86,12 @@ var startDate = new Date("2010-01-01"),
     endDate = new Date("2015-12-31");
 
 var width = gWidth,
-    height = gHeight;
+    height = gHeight - margin.slider;
 
-var svg = svgContainer.select("#slider");
+//var svg = svgContainer.select("#slider");
+
+var svg = sliderSVG.select("#slider");
+
   /*  .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height); */
@@ -95,14 +120,13 @@ slider.append("line")
           //console.log("d3.event.x: " + d3.event.x );
           h = x.invert(d3.event.x);
           handle.attr("cx", x(h));
+          sliderCircleX = d3.event.x;
+          sliderCircleY = d3.event.y;
           //label
           //    .attr("x", x(h))
           //    .text(formatDate(h));
-          // UCOMMENT ME:
-          // updateView(formatDateIntoYear(h), triggerSelected )
+          updateView(formatDateIntoYear(h), triggerSelected )
         }));
-
-//        .on("start drag", function() { hue(x.invert(d3.event.x));}));
 
 slider.insert("g", ".track-overlay")
     .attr("class", "ticks")
@@ -125,7 +149,10 @@ var label = slider.append("text")
 
 var handle = slider.insert("circle", ".track-overlay")
     .attr("class", "handle")
-    .attr("r", 9);
+    .attr("r", 9)
+    .attr("cx",  sliderCircleX)
+    .attr("cy", sliderCircleY)
+    ;
 
     /*
 function hue(h) {
@@ -173,8 +200,13 @@ function svgContainerInit(action="hold") {
     }
 }
 
+function sliderContainerReset(){
+  d3.selectAll(".slider").remove();
+}
+
+
 function updateView(yearToDisplay=2015,featureToDisplay="") {
-  var travYear = yearToDisplay;
+  travYear = yearToDisplay;
   console.log ("Inside updateView(). yearToDisplay: " + yearToDisplay);
   console.log ("Inside updateView(). featureToDisplay: " + featureToDisplay);
   if(featureToDisplay != "" || featureToDisplay != null)
@@ -182,25 +214,6 @@ function updateView(yearToDisplay=2015,featureToDisplay="") {
     triggerSelected = parseInt(featureToDisplay);
   }
 
-
-  /*
-        switch (buttonValue.key) {
-        case "1":
-          overview(svgContainer);
-          break;
-        case "2":
-          incomepoverty(svgContainer);
-          break;
-        case "3":
-          racialdist(svgContainer);
-          break;
-        default:
-          debugMsg("buttonKey is: " + buttonValue.key);
-          break;
-        }
-
-      });
-*/
       if (!isRealValue(triggerSelected)) {
         showHide('abtViz');
         svgContainerInit();
@@ -214,6 +227,7 @@ function updateView(yearToDisplay=2015,featureToDisplay="") {
             triggerSelected=buttonValue.key;
             document.getElementById("abtVizBtn").style.display = 'none';
             svgContainerInit("clear");
+            sliderContainerReset();
             showHide('abtVizDiv', "show"); return false;
           });
           overview();
@@ -227,21 +241,6 @@ function updateView(yearToDisplay=2015,featureToDisplay="") {
 
 function showHide(shID, show="show") {
   console.log("Entering showHide()");
-
-  /*
-  if (document.getElementById(shID)) {
-    console.log("showHide(): shID: " + shID);
-    if (document.getElementById(shID).style.display != 'none') {
-      console.log("showHide(): shID: " + "NONE");
-      document.getElementById(shID).style.display = 'block';
-    } else {
-      console.log("showHide(): shID: " + "NONONE");
-      document.getElementById(shID).style.display = 'none';
-    }
-  }
-
-*/
-
 
   if (document.getElementById(shID)) {
     console.log("showHide(): shID: " + shID + "show: " + show);
@@ -276,27 +275,29 @@ function displayTheScene(choice) {
       console.log("triggerSelected: " + triggerSelected);
       console.log("Calling displayTheScene following features button click");
       displayTheScene(buttonValue.key);
-  /*
-  choice = parseInt(choice);
-  console.log("Choice after parseInt: " + choice)
-  switch (choice) {
-    case 1:
-      overview();
-      break;
-    case 2:
-      incomepoverty();
-      break;
-    case 3:
-      racialdist();
-      break;
-    default:
-      console.log("displayScene could not be rendered. The choice was: " + choice);
-      break;
-    }
-    */
+
   });
 
   choice = parseInt(choice);
+
+  var sceneheading = "2010-2015 ACS Analysis: ";
+  switch (choice) {
+    case 1:
+      sceneheading = sceneheading +  "Population Overview";
+      break;
+    case 2:
+      sceneheading = sceneheading +   "Income to Poverty Ratio";
+      break;
+    case 3:
+      sceneheading = sceneheading +  "Racial distribution";
+      break;
+    default:
+      sceneheading = sceneheading +  "Unknown scene!";
+      break;
+    }
+
+  //document.getElementById("sceneheadingstr").innerHTML=sceneheading;
+
   console.log("Choice after parseInt: " + choice)
   switch (choice) {
     case 1:
@@ -312,142 +313,6 @@ function displayTheScene(choice) {
       console.log("displayScene could not be rendered. The choice was: " + choice);
       break;
     }
-}
-
-/*
-function displayAboutVizBtn() {
-  svgContainerInit("clear");
-  d3.select(".abtVizMsg").style("opacity", "1");
-
-  var displayAboutBtn = d3.select(".abtVizMsg")
-    .selectAll("button")
-    .data(['About the Visualization'])
-    .enter().append("button")
-    .text(function(d) { return d; })
-    .on("click", function(buttonValue) {
-        displayAboutVizMessage();
-    });
-}
-*/
-
-function displayAboutVizMessage() {
-  console.log("Inside displayAboutVizMessage()");
-  d3.select(".abtVizMsg").style("visibility", "visible");
-
-/*
-var aboutVizOverview = '
-Using 2015 US Census data find out the sex ratio and citizen ratio across the country. Find the racial make up of various census regions. Find out which areas have highest overall and child poverty in relation to per capita income distribution.
-
- It contains 4 charts. In this visualization I am analyzing 2010 to 2015 US Census ACS. Only the contiguous states related data were used for analysis. These are the charts I have created:
-(i) Population Overview
-(iii) Income, Poverty & Unemployment
-(iv) Racial Distribution Per Region
-
-
-The first is  filled maps giving views with two different aspects captured in the data set. Population Overview filled map provides an overview of total population per state, women to men ratio.
-
-Income, Poverty & Unemployment is  a scattered plot that captures the relation ship between per capita income and poverty in each US State.  This is a discrete quantitative vs continous quantitative plot. Circle is the shape used. The position of circle represents this relationshiop. The size of the circle represents another key indicator:  '% of child poverty'. The color of the circle represents percentage unemployment in each state.
-
-Racial Distribution Per Region is a bar chart representing racial make up of population across 4 US census regions. It is plotted against regions and 6 racial groupings Vs the percentage population of each race, which is a continuous variable for this purpose.
-
-';
-*/
-
-var rubricTextJSON =
-{
-  "rubric": [
-      {"question": "Does the narrative visualization correctly follow the hybrid structure as stated by the essay?",
-      "answer":"Yes. The narrative visualization correctly follows the hybrid structure stated in the essay. Yes. The narrative visualization correctly follows the hybrid structure stated in the essay.Yes. The narrative visualization correctly follows the hybrid structure stated in the essay"
-      },
-      {"question": "Does the narrative visualization effectively utilize scenes?",
-      "answer":"Yes. The essay properly discusses the layout and design of the scenes of the narrative visualization."
-      },
-      {"question": "Does the narrative visualization effectively utilize annotations?",
-      "answer":"Yes. The essay properly discusses the application of the annotations of the narrative visualization."
-      },
-      {"question": "Does the narrative visualization effectively utilize parameters?",
-      "answer":"Yes. The essay properly discusses the parameters of the narrative visualization, including describing which parameters control the current state of the narrative visualization."
-      },
-      {"question": "Does the narrative visualization effectively utilize triggers?",
-      "answer":"Yes. The essay properly discusses the triggers, including what user events trigger what parameter value changes, and how the viewer is aware of available user events."
-      }
-]
-};
-
-/*
-var rubricTextJSON =
-[
-      {"text": "Does the narrative visualization correctly follow the hybrid structure as stated by the essay?"},
-      {"text":"Yes. The narrative visualization correctly follows the hybrid structure stated in the essay."},
-      {"text": "Does the narrative visualization effectively utilize scenes?"},
-      {"text":"Yes. The essay properly discusses the layout and design of the scenes of the narrative visualization."},
-      {"text": "Does the narrative visualization effectively utilize annotations?"},
-      {"text":"Yes. The essay properly discusses the application of the annotations of the narrative visualization."},
-      {"text": "Does the narrative visualization effectively utilize parameters?"},
-      {"text": "Yes. The essay properly discusses the parameters of the narrative visualization, including describing which parameters control the current state of the narrative visualization."},
-      {"text": "Does the narrative visualization effectively utilize triggers?"},
-      {"text":"Yes. The essay properly discusses the triggers, including what user events trigger what parameter value changes, and how the viewer is aware of available user events."}
-];
-
-*/
-    var columns = ["question", "answer"];
-
-    var table = d3.select(".abtVizMsg").append("table"),
-        thead = table.append("thead"),
-        tbody = table.append("tbody");
-
-
-thead.append("tr")
-        .selectAll("th")
-        .data(columns)
-        .enter()
-        .append("th")
-            .text(function(column) { return column; });
-
-
-    // create a row for each object in the data
-    var rows = tbody.selectAll("tr")
-        .data(rubricTextJSON.rubric)
-        .enter()
-        .append("tr");
-
-    // create a cell in each row for each column
-    var cells = rows.selectAll("td")
-        .data(function(row) {
-            return columns.map(function(column) {
-                return {column: column, value: row[column]};
-            });
-        })
-        .enter()
-        .append("td")
-        .text(function(d) { return d.value; });
-
-
-          var displayAboutBtn = d3.select(".abtVizMsg")
-    .selectAll("button")
-    .data(['About the Visualization'])
-    .enter().append("button")
-    .text(function(d) { return d; })
-    .on("click", function(buttonValue) {
-        displayAboutVizMessage();
-    });
-
-/*
-  d3.select(".abtVizMsg")
-    .selectAll("button")
-    .data(['Take me to the Visualization'])
-    .enter().append("button")
-    .text(function(d) { return d; })
-    .on("click", updateView());
-*/
-/*
-d3.select(".abtVizMsg")
-    .selectAll("p")
-    .data(rubricTextJSON.rubric)
-    .enter()
-    .append("p")
-    .text(function(d){return [d.question d.answer]});
-*/
 }
 
 
@@ -457,8 +322,13 @@ var width = canvasWidth,
     height = canvasHeight;
 console.log("Inside Overview");
 
+
 var mapColor = d3.scaleLinear()
-                         .range(['#ffffd4','#fee391','#fec44f','#fe9929','#d95f0e','#993404']);
+                         //.range(['#ffffd4','#fee391','#fec44f','#fe9929','#d95f0e','#993404']
+                         //.range(['#fee5d9','#fcae91','#fb6a4a','#de2d26','#a50f15']
+                         //.range(['#fef0d9','#fdcc8a','#fc8d59','#d7301f']
+                         .range(['#fee8c8','#fdbb84','#e34a33']
+                        );
 
 
 var projection = d3.geoAlbers()
@@ -507,14 +377,14 @@ d3.csv(filePopulationByStateURL, function(data) {
     });
 
 });
-slider(svgContainer);
+slider();
 }
 
 
 function incomepoverty(){
 
   var width = canvasWidth,
-  height = canvasHeight-60;
+  height = canvasHeight -  margin.slider - 100;
 
   var lmargin = {top: 20, right: 20, bottom: 100, left: 40},
   width = canvasWidth - lmargin.left - lmargin.right,
@@ -603,7 +473,6 @@ svg.selectAll(".dot")
     .data(data)
   .enter().append("circle")
     .attr("class", "dot")
-    //.attr("r", 3.5)
     .attr("r", cirRadMap)
     .attr("cx", function(d) { return x(d.IncomePerCap); })
     .attr("cy", function(d) { return y(d.Poverty); })
@@ -642,13 +511,13 @@ legend.append("text")
     .text(function(d) { return d; });
 
 });
-slider(svgContainer);
+slider();
 
 }
 
 function racialdist() {
   var width = canvasWidth,
-      height = canvasHeight - 100;
+      height = canvasHeight -  margin.slider - 100;
 
 var svg = svgContainer,
 g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -664,7 +533,8 @@ var y = d3.scaleLinear()
     .rangeRound([height, 0]);
 
 var z = d3.scaleOrdinal()
-    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+    .range(['#feedde','#fdbe85','#fd8d3c','#e6550d','#a63603']
+  );
 
 
 d3.csv(fileRacialDistributionPerRegionURL , function(d, i, columns) {
@@ -708,7 +578,7 @@ d3.csv(fileRacialDistributionPerRegionURL , function(d, i, columns) {
       .attr("fill", "#000")
       .attr("font-weight", "bold")
       .attr("text-anchor", "start")
-      .text("Population (log scale)");
+      .text("Population");
 
   var legend = g.append("g")
       .attr("font-family", "sans-serif")
@@ -732,7 +602,7 @@ d3.csv(fileRacialDistributionPerRegionURL , function(d, i, columns) {
       .text(function(d) { return d; });
 });
 
-slider(svgContainer);
+slider();
 
 
 }
